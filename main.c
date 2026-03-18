@@ -1,73 +1,74 @@
 #include <stdio.h>
-#include <string.h>
-
-#define MAX 50
-
-typedef struct {
-    char pid[10];
-    int at, bt;
-    int ct, wt, tat;
-    int completed;
-} Process;
-
-int main() {
-    int n;
-    Process p[MAX];
-
-    printf("Enter number of processes: ");
-    scanf("%d", &n);
-
-    // Input
-    for(int i = 0; i < n; i++) {
-        scanf("%s %d %d", p[i].pid, &p[i].at, &p[i].bt);
-        p[i].completed = 0;
-    }
-
-    int time = 0, completed = 0;
-
-    while(completed < n) {
-        int idx = -1;
-        int min_bt = 1e9;
-
-        // Find process with minimum BT among arrived processes
-        for(int i = 0; i < n; i++) {
-            if(p[i].at <= time && p[i].completed == 0) {
-                if(p[i].bt < min_bt) {
-                    min_bt = p[i].bt;
-                    idx = i;
-                }
-            }
-        }
-
-        if(idx == -1) {
-            time++; // CPU idle
-        } else {
-            // Execute process
-            time += p[idx].bt;
-            p[idx].ct = time;
-            p[idx].tat = p[idx].ct - p[idx].at;
-            p[idx].wt = p[idx].tat - p[idx].bt;
-            p[idx].completed = 1;
-            completed++;
-        }
-    }
-
-    float total_wt = 0, total_tat = 0;
-
-    printf("\nWaiting Time:\n");
-    for(int i = 0; i < n; i++) {
-        printf("%s %d\n", p[i].pid, p[i].wt);
-        total_wt += p[i].wt;
-    }
-
-    printf("Turnaround Time:\n");
-    for(int i = 0; i < n; i++) {
-        printf("%s %d\n", p[i].pid, p[i].tat);
-        total_tat += p[i].tat;
-    }
-
-    printf("Average Waiting Time: %.2f\n", total_wt / n);
-    printf("Average Turnaround Time: %.2f\n", total_tat / n);
-
-    return 0;
+#include <stdlib.h>
+#include <stdbool.h>
+typedef struct
+{
+ int arrival_time;
+ int burst_time;
+ int completion_time;
+ int tat;
+ int waiting_time;
+} process;
+int main(void)
+{
+ int n = 0;
+ printf("Enter the number of processes: ");
+ scanf("%d", &n);
+process *list = (process *)malloc(n * sizeof(process));
+ for (int i = 0; i < n; i++)
+ {
+ printf("P%d ", i + 1);
+ scanf("%d %d", &list[i].arrival_time, &list[i].burst_time);
+ }
+ int current_time = 0;
+ int completed = 0;
+ bool *process_completed = (bool *)malloc(n * sizeof(bool));
+ for (int i = 0; i < n; i++) process_completed[i] = false;
+ while (completed < n)
+ {
+ int idx = -1;
+ int min_burst = 1e9;
+ for (int i = 0; i < n; i++)
+ {
+ if (!process_completed[i] && list[i].arrival_time <= current_time)
+ {
+ if (list[i].burst_time < min_burst)
+ {
+min_burst = list[i].burst_time;
+ idx = i;
+ }
+ }
+ }
+ if (idx == -1)
+ {
+ current_time++;
+ }
+ else
+ {
+ current_time += list[idx].burst_time;
+ list[idx].completion_time = current_time;
+ list[idx].tat = list[idx].completion_time - list[idx].arrival_time;
+ list[idx].waiting_time = list[idx].tat - list[idx].burst_time;
+ process_completed[idx] = true;
+ completed++;
+ }
+ }
+ float total_wt = 0, total_tat = 0;
+printf("\nWaiting Time:\n");
+ for (int i = 0; i < n; i++)
+ {
+ printf("P%d %d\n", i + 1, list[i].waiting_time);
+ total_wt += list[i].waiting_time;
+ }
+ printf("Turnaround Time:\n");
+ for (int i = 0; i < n; i++)
+ {
+ printf("P%d %d\n", i + 1, list[i].tat);
+ total_tat += list[i].tat;
+ }
+ printf("Average Waiting Time: %.2f\n", total_wt / n);
+ printf("Average Turnaround Time: %.2f\n", total_tat / n);
+ free(list);
+ free(process_completed);
+ return 0;
 }
