@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <limits.h>   // FIX: for INT_MAX
+#include <limits.h>
 
 typedef struct
 {
@@ -14,29 +14,51 @@ typedef struct
 
 int main(void)
 {
-    int n = 0;
+    int n;
+
     printf("Enter the number of processes: ");
-    scanf("%d", &n);
+    if (scanf("%d", &n) != 1 || n <= 0)
+    {
+        printf("Invalid input\n");
+        return 1;
+    }
 
     process *list = (process *)malloc(n * sizeof(process));
+    if (list == NULL)
+    {
+        printf("Memory allocation failed\n");
+        return 1;
+    }
 
+    bool *process_completed = (bool *)malloc(n * sizeof(bool));
+    if (process_completed == NULL)
+    {
+        printf("Memory allocation failed\n");
+        free(list);
+        return 1;
+    }
+
+    // Input
     for (int i = 0; i < n; i++)
     {
         printf("P%d (AT BT): ", i + 1);
-        scanf("%d %d", &list[i].arrival_time, &list[i].burst_time);
+        if (scanf("%d %d", &list[i].arrival_time, &list[i].burst_time) != 2)
+        {
+            printf("Invalid input\n");
+            free(list);
+            free(process_completed);
+            return 1;
+        }
+        process_completed[i] = false;
     }
 
     int current_time = 0;
     int completed = 0;
 
-    bool *process_completed = (bool *)malloc(n * sizeof(bool));
-    for (int i = 0; i < n; i++)
-        process_completed[i] = false;
-
     while (completed < n)
     {
         int idx = -1;
-        int min_burst = INT_MAX;   // FIXED
+        int min_burst = INT_MAX;
 
         for (int i = 0; i < n; i++)
         {
@@ -57,6 +79,7 @@ int main(void)
         else
         {
             current_time += list[idx].burst_time;
+
             list[idx].completion_time = current_time;
             list[idx].tat = list[idx].completion_time - list[idx].arrival_time;
             list[idx].waiting_time = list[idx].tat - list[idx].burst_time;
@@ -66,7 +89,7 @@ int main(void)
         }
     }
 
-    float total_wt = 0, total_tat = 0;
+    float total_wt = 0.0f, total_tat = 0.0f;
 
     printf("\nWaiting Time:\n");
     for (int i = 0; i < n; i++)
